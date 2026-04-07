@@ -2,8 +2,7 @@ name: Daily Crawler
 
 on:
   schedule:
-    - cron: '40 11 * * 1-5'
-      timezone: 'Asia/Seoul'
+    - cron: '45 2 * * 1-5'
   workflow_dispatch:
 
 jobs:
