@@ -8,7 +8,6 @@ def get_web_data():
     url = "https://m.pusan.ac.kr/ko/meals?current=yangsan"
     
     try:
-        # 봇으로 인식되지 않도록 브라우저 정보(User-Agent) 추가
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
@@ -17,22 +16,33 @@ def get_web_data():
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # 1. strong 태그 중 class가 blue_text인 요소 찾기
-        target_strong = soup.find('strong', class_='blue_text')
+        
+        target_strong = None
+        all_blue_texts = soup.find_all('strong', class_='blue_text')
+        
+        for st in all_blue_texts:
+            if "정식-5,000" in st.get_text():
+                target_strong = st
+                break
         
         if target_strong:
-            # 2. strong 태그 바로 다음(sibling)에 있는 p 태그 찾기
+
             next_p = target_strong.find_next_sibling('p')
             
             if next_p:
-                # 3. p 태그 내부의 span 태그 텍스트 가져오기
-                span_text = next_p.find('span').get_text(strip=True) if next_p.find('span') else "메뉴 정보 없음"
-                
-                return f"오늘의 점심 \n\n{span_text}"
+          
+                span_element = next_p.find('span')
+                if span_element:
+                    span_text = span_element.get_text(strip=True)
+        
+                    span_text = span_text.replace('\t', '').replace('\r', '')
+                    return f"오늘의 점심\n\n{span_text}"
+                else:
+                    return "❌ 식단 내용(span)이 비어있습니다."
             else:
                 return "❌ 식단 내용(p 태그)을 찾을 수 없습니다."
         else:
-            return "❌ 식단 구분(strong.blue_text)을 찾을 수 없습니다."
+            return "❌ '정식-5,000' 메뉴를 찾을 수 없습니다. (식단이 없는 날일 수 있습니다.)"
             
     except Exception as e:
         return f"❌ 크롤링 오류 발생: {e}"
